@@ -1,48 +1,152 @@
 ﻿using UnityEngine;
+using System;
 
 public class Grapher2 : MonoBehaviour
 {
+
     private AudioSource aSource;
-    public int maxSize=256;
-
-
-
-
-    public enum FunctionOption
+    public int maxSize = 128;
+    [Range(10, 100)]
+    public int resolution = 90;
+    private Boolean highlighted = false;
+    
+    public Boolean getHighlighted()
     {
-        Linear,
-        Exponential,
-        Parabola,
-        Sine,
-        Ripple,
-        AudioWave
+        return this.highlighted;
     }
 
-    private delegate float FunctionDelegate(Vector3 p, float t);
+    public void Highlight()
+    {
+        this.highlighted = true;
+    }
 
-    public FunctionOption function;
+    public void Unhighlight()
+    {
+        this.highlighted = false;
+    }
 
-    [Range(10, 90)]
-    public int resolution = 10;
 
     private int currentResolution;
     private ParticleSystem.Particle[] points;
 
+    public void increaseVol()
+    {
+        AudioSource audio = this.GetComponent<AudioSource>();
+        if (audio.volume < 0.90)
+        {
+            audio.volume+=0.1f;
+        }
+    }
+
+    public void decreaseVol()
+    {
+        AudioSource audio = this.GetComponent<AudioSource>();
+        if(audio.volume > 0.10)
+        {
+            audio.volume-=0.1f;
+        }
+    }
+   void OnGUI()
+    {
+        Event e = Event.current;
+
+        if (e.isKey && e.keyCode == KeyCode.KeypadPlus){
+            AudioSource audio = this.GetComponent<AudioSource>();
+            
+        }
+        if (e.isKey)
+        {
+            Debug.Log("Detected key code: " + e.keyCode);
+
+            if (e.keyCode.ToString().Contains("Alpha") && e.keyCode.ToString()[5] >= '0' && e.keyCode.ToString()[5] <= '9')
+            {
+                String theName = this.gameObject.name;
+                switch (theName)
+                {
+                    case ("Graph 1"):
+                        if (e.keyCode == KeyCode.Alpha1)
+                        {
+                            this.Highlight();
+                        }
+                        else this.Unhighlight();
+                        break;
+                    case ("Graph 2"):
+                        if (e.keyCode == KeyCode.Alpha2)
+                        {
+                            this.Highlight();
+                        }
+                        else
+                        {
+                            this.Unhighlight();
+                        }
+                        break;
+                    case ("Graph 3"):
+                        if (e.keyCode == KeyCode.Alpha3)
+                        {
+                            this.Highlight();
+                        }
+                        else this.Unhighlight();
+                        break;
+                    case ("Graph 4"):
+                        if (e.keyCode == KeyCode.Alpha4)
+                        {
+                            this.Highlight();
+                        }
+                        else this.Unhighlight();
+                        break;
+
+                    case ("Graph 5"):
+                        if (e.keyCode == KeyCode.Alpha5)
+                        {
+                            this.Highlight();
+                        }
+                        else this.Unhighlight();
+                        break;
+                    case ("Graph 6"):
+                        if (e.keyCode == KeyCode.Alpha6)
+                        {
+                            this.Highlight();
+                        }
+                        else this.Unhighlight();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (e.keyCode == KeyCode.UpArrow)
+            {
+                if (this.getHighlighted())
+                {
+                    increaseVol();
+                }
+            }
+
+            else if (e.keyCode == KeyCode.DownArrow)
+            {
+                if (this.getHighlighted())
+                {
+                    decreaseVol();
+                }
+            }
+        }
+    }
+
+    
     private void CreatePoints()
     {
         float[] spectrum = aSource.GetSpectrumData(maxSize, 0, FFTWindow.BlackmanHarris);
         currentResolution = resolution;
-        points = new ParticleSystem.Particle[resolution * resolution];
+        points = new ParticleSystem.Particle[resolution * resolution/4];
         float increment = 1f / (resolution - 1);
         int i = 0;
-        for (int y = 0; y < resolution; y++)
+        for (int y = 0; y < resolution/8; y++)
         {
             for (int z = 0; z < resolution; z++)
             {
 
                 Vector3 p = new Vector3(0f, y*increment, z * increment);
                 points[i].position = p;
-                points[i].color = new Color(0f, p.y, p.z);
+                points[i].color = new Color(0f, p.y, p.z, 1f);
                 points[i++].size = 0.1f;
             } 
         }
@@ -50,18 +154,21 @@ public class Grapher2 : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log("Awake");
         this.aSource = GetComponent<AudioSource>();
+        
     }
 
     void Update()
     {
 
+        Debug.Log("Updating");
         float[] spectrum = aSource.GetSpectrumData(maxSize, 0, FFTWindow.BlackmanHarris);
         if (currentResolution != resolution || points == null)
         {
             CreatePoints();
         }
-      //  FunctionDelegate f = functionDelegates[(int)function];
+        //  FunctionDelegate f = functionDelegates[(int)function];
         float t = Time.timeSinceLevelLoad;
         for (int j = 0; j < points.Length; j++)
         {
@@ -70,51 +177,29 @@ public class Grapher2 : MonoBehaviour
             points[j].position = p;
             Color c = points[j].color;
             c.g = p.x;
+            if (highlighted)
+            {
+                c = Color.yellow;
+            }
+            else
+            {
+                c = Color.green;
+            }
+            c.b = p.x;
             points[j].color = c;
+            
         }
-        GetComponent<ParticleSystem>().SetParticles(points, points.Length);
         
-        int i = 1;
-       /* while (i < 8191)
-        {
-            Debug.DrawLine(new Vector3(i - 1, spectrum[i]*100 + 10, 0), new Vector3(i, spectrum[i + 1]*100 + 10, 0), Color.red);
-            Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, -1), new Vector3(i, Mathf.Log(spectrum[i]) + 10, -1), Color.cyan);
-            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
-            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 2), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 2), Color.yellow);
-            i++;
-        }*/
-    }
 
-    private float Linear(Vector3 p, float t)
-    {
-        return p.x;
-    }
 
-    private float Exponential(Vector3 p, float t)
-    {
-        return p.x * p.x;
-    }
-
-    private float Parabola(Vector3 p, float t)
-    {
-        p.x = 2f * p.x - 1f;
-        p.z = 2f * p.z - 1f;
-        return 1f - p.x * p.x * p.z * p.z;
-    }
-
-    private float Sine(Vector3 p, float t)
-    {
-        return 0.50f +
-            0.25f * Mathf.Sin(4 * Mathf.PI * p.x + 4 * t) * Mathf.Sin(2 * Mathf.PI * p.z + t) +
-            0.10f * Mathf.Cos(3 * Mathf.PI * p.x + 5 * t) * Mathf.Cos(5 * Mathf.PI * p.z + 3 * t) +
-            0.15f * Mathf.Sin(Mathf.PI * p.x + 0.6f * t);
+        //set position and color of points
+     
+        GetComponent<ParticleSystem>().SetParticles(points, points.Length);
     }
 
     private float AudioWave(Vector3 p, float t)
     {
         float[] spectrum = aSource.GetSpectrumData(maxSize, 0, FFTWindow.BlackmanHarris);
-        int y = (int)p.y;
-        int z = (int) p.z;
         p.y -= 0.1f;
         p.z -= 0.1f;
         float vol = aSource.volume;
@@ -126,16 +211,25 @@ public class Grapher2 : MonoBehaviour
             sum += spectrum[i];
         }
         sum *= volSquare;
-        return 0.5f + Mathf.Sin( sum*1000* Mathf.PI * squareRadius*aSource.volume*aSource.volume - 2f * t) / (2f + 100f * squareRadius);
+        if(volSquare>0 && volSquare > .001)
+        {
+            // return sum/4f*Mathf.Sin(sum* Mathf.PI * squareRadius * aSource.volume * aSource.volume - 1f) / (2f + 10f * squareRadius);
+            return 0.5f + Mathf.Sin(sum * 1000 * Mathf.PI * squareRadius * aSource.volume * aSource.volume - 2f * t) / (2f + 100f * squareRadius);
+        }
+       else
+        {
+            return 0.2f * Mathf.Sin(0.2f * Mathf.PI * t);
+        }
 
     }
 
+    //For Debugging -gives generic sine wave (ignores audio file)
     private float Ripple(Vector3 p, float t)
     {
-        p.x -= 0.05f;
-        p.z -= 0.05f;
-        float squareRadius = p.x * p.x + p.z * p.z;
-        return 0.5f + Mathf.Sin(15f * Mathf.PI * squareRadius - 2f * t) / (2f + 100f * squareRadius);
+        p.y -= 0.5f;
+        p.z -= 0.5f;
+        float squareRadius = p.y * p.y + p.z * p.z;
+        return Mathf.Sin(4f * Mathf.PI * squareRadius - 2f * t);
     }
 
 }
