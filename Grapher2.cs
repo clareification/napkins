@@ -3,7 +3,7 @@ using System;
 
 public class Grapher2 : MonoBehaviour
 {
-
+    public static int activeTrack;
     private AudioSource aSource;
     public int maxSize = 128;
     [Range(10, 100)]
@@ -32,20 +32,26 @@ public class Grapher2 : MonoBehaviour
     public void increaseVol()
     {
         AudioSource audio = this.GetComponent<AudioSource>();
-        if (audio.volume < 0.90)
+        if (audio.volume <= 0.90)
         {
             audio.volume+=0.1f;
         }
+        audio.mute = false;
     }
 
     public void decreaseVol()
     {
         AudioSource audio = this.GetComponent<AudioSource>();
-        if(audio.volume > 0.10)
+        if(audio.volume >= 0.10)
         {
             audio.volume-=0.1f;
         }
+        else if(audio.volume <= 0.1)
+        {
+            audio.mute = true;
+        }
     }
+
    void OnGUI()
     {
         Event e = Event.current;
